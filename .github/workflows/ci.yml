@@ -19,6 +19,6 @@ jobs:
         run: |
           xcodebuild \
             -project "Brightness Control.xcodeproj" \
-            -target "亮度控制" \
+            -target "Brightness Contro" \
             -configuration Debug \
             build

@@ -24,7 +24,7 @@ jobs:
         run: |
           xcodebuild \
             -project "${{ env.APP_NAME }}.xcodeproj" \
-            -target "亮度控制" \
+            -target "Brightness Contro" \
             -configuration Release \
             CONFIGURATION_BUILD_DIR="$PWD/build" \
             build
@@ -32,7 +32,7 @@ jobs:
       - name: Locate .app
         id: app
         run: |
-          APP_PATH="build/亮度控制.app"
+          APP_PATH="build/Brightness Contro.app"
           echo "APP_PATH=$APP_PATH"
           echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
 

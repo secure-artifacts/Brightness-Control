@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  APP_NAME: "Brightness Control"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Universal Binary
+        run: |
+          xcodebuild \
+            -project "${{ env.APP_NAME }}.xcodeproj" \
+            -target "亮度控制" \
+            -configuration Release \
+            CONFIGURATION_BUILD_DIR="$PWD/build" \
+            build
+
+      - name: Locate .app
+        id: app
+        run: |
+          APP_PATH="build/亮度控制.app"
+          echo "APP_PATH=$APP_PATH"
+          echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p dist
+          cp -R "${{ steps.app.outputs.app_path }}" dist/
+
+      - name: Zip
+        id: zip
+        run: |
+          ZIP_NAME="${{ env.APP_NAME }}-${{ github.ref_name }}-macos-universal.zip"
+          cd dist
+          zip -r "../$ZIP_NAME" .
+          echo "zip_path=./$ZIP_NAME" >> $GITHUB_OUTPUT
+
+      - name: Attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ steps.zip.outputs.zip_path }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.zip.outputs.zip_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -55,7 +55,7 @@ jobs:
         run: |
           xcodebuild build \
             -project "Brightness Control.xcodeproj" \
-            -target "亮度控制" \
+            -target "Brightness Contro" \
             -jobs $(sysctl -n hw.logicalcpu) \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO

@@ -54,8 +54,8 @@ jobs:
       - name: Build project
         run: |
           xcodebuild build \
-            -project "Video Compressor.xcodeproj" \
-            -target "Video Compressor" \
+            -project "Brightness Control.xcodeproj" \
+            -target "Brightness Control" \
             -jobs $(sysctl -n hw.logicalcpu) \
             ONLY_ACTIVE_ARCH=YES \
             ARCHS=arm64 \

@@ -35,25 +35,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
-      # ✅ 缓存 DerivedData，实现增量编译
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-derived-${{ hashFiles('**/*.xcodeproj/project.pbxproj') }}
-          restore-keys: |
-            ${{ runner.os }}-derived-
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: swift
           build-mode: manual
 
-      # ✅ 去掉 clean，利用增量编译；-jobs 并行加速
       - name: Build project
         run: |
-          xcodebuild build \
+          xcodebuild clean build \
             -project "Brightness Control.xcodeproj" \
             -target "Brightness Control" \
             -jobs $(sysctl -n hw.logicalcpu) \

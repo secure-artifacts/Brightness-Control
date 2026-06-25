@@ -2,8 +2,6 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
 
 env:
   APP_NAME: "Brightness Control"
@@ -24,7 +22,7 @@ jobs:
         run: |
           xcodebuild \
             -project "${{ env.APP_NAME }}.xcodeproj" \
-            -target "Brightness Control" \
+            -scheme "${{ env.APP_NAME }}" \
             -configuration Release \
             CONFIGURATION_BUILD_DIR="$PWD/build" \
             build
@@ -32,7 +30,7 @@ jobs:
       - name: Locate .app
         id: app
         run: |
-          APP_PATH="build/Brightness Control.app"
+          APP_PATH="build/${{ env.APP_NAME }}.app"
           echo "APP_PATH=$APP_PATH"
           echo "app_path=$APP_PATH" >> $GITHUB_OUTPUT
 

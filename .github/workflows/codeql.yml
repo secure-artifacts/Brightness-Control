@@ -2,65 +2,50 @@ name: CodeQL
 
 on:
   push:
-    branches: [ "main" ]        # ✅ 只在主分支 push 时触发，不是所有分支
   pull_request:
-    branches: [ "main" ]        # ✅ 只分析目标 main 的 PR
   schedule:
-    - cron: "0 2 * * 1"
-
-permissions:
-  contents: read
-  security-events: write
+    - cron: '0 6 * * 1'
 
 jobs:
   analyze:
-    runs-on: macos-15
+    name: Analyze (Swift)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+      packages: read
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-
-      # ✅ 缓存 SPM 依赖，避免每次重新下载
-      - name: Cache Swift Package Manager
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.spm-cache
-            ~/Library/Caches/org.swift.swiftpm
-            .build
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-
-
-      # ✅ 缓存 DerivedData，实现增量编译
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-derived-${{ hashFiles('**/*.xcodeproj/project.pbxproj') }}
-          restore-keys: |
-            ${{ runner.os }}-derived-
-
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: swift
           build-mode: manual
 
-      # ✅ 去掉 clean，利用增量编译；-jobs 并行加速
-      - name: Build project
+      # macOS runner 已预装 Xcode；如需锁定版本，取消下面注释：
+      # - uses: maxim-lobanov/setup-xcode@v1
+      #   with:
+      #     xcode-version: latest-stable
+
+      - name: Build with xcodebuild
         run: |
-          xcodebuild build \
+          xcodebuild clean build \
             -project "Brightness Control.xcodeproj" \
             -target "Brightness Control" \
             -jobs $(sysctl -n hw.logicalcpu) \
+            ONLY_ACTIVE_ARCH=YES \
+            ARCHS=arm64 \
+            SWIFT_COMPILATION_MODE=singlefile \
+            SWIFT_OPTIMIZATION_LEVEL=-Onone \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:swift"

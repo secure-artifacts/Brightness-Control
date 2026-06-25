@@ -45,22 +45,29 @@ jobs:
             ${{ runner.os }}-derived-
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: swift
           build-mode: manual
 
-      # ✅ 去掉 clean，利用增量编译；-jobs 并行加速
+      # 关键：SWIFT_ENABLE_EXPLICIT_MODULES=NO
+      # CodeQL swift extractor (2.25.6) 与 Xcode 的 Explicit Modules 编译模型不兼容。
+      # 显式模块默认开启时，Xcode 把编译拆成独立的 emit-module + compile 阶段，
+      # extractor 只截到 emit-module 调用、提取不到源码，finalize 报
+      # "CodeQL could not process any code / no source code seen during build"。
+      # 关掉显式模块退回经典编译模型即可正常提取（已用 codeql 2.25.6 本地复现并验证修复）。
       - name: Build project
         run: |
           xcodebuild build \
             -project "Brightness Control.xcodeproj" \
-            -target "Brightness Control" \
-            -jobs $(sysctl -n hw.logicalcpu) \
+            -scheme "Brightness Control" \
+            -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            SWIFT_ENABLE_EXPLICIT_MODULES=NO
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:swift"
